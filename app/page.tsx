@@ -51,7 +51,7 @@ useEffect(() => {
   }
 
   const addBookmark = async () => {
-    if (!title || !url) return
+    if (!title || !url || !user) return
 
     await supabase.from('bookmarks').insert({
       title,
