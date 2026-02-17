@@ -2,18 +2,25 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import type { User } from '@supabase/supabase-js'
 
 export default function Home() {
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<User | null>(null)
   const [bookmarks, setBookmarks] = useState<any[]>([])
   const [title, setTitle] = useState('')
   const [url, setUrl] = useState('')
 
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
+useEffect(() => {
+  const getUser = async () => {
+    const { data, error } = await supabase.auth.getUser()
+
+    if (!error) {
       setUser(data.user)
-    })
-  }, [])
+    }
+  }
+
+  getUser()
+}, [])
 
   useEffect(() => {
     if (!user) return
