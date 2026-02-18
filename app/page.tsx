@@ -3,24 +3,42 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import type { User } from '@supabase/supabase-js'
-
+import { useRouter } from 'next/navigation'
 export default function Home() {
   const [user, setUser] = useState<User | null>(null)
   const [bookmarks, setBookmarks] = useState<any[]>([])
   const [title, setTitle] = useState('')
   const [url, setUrl] = useState('')
-
+  const [loading, setLoading] = useState(true)
+  const router = useRouter()
 useEffect(() => {
-  const getUser = async () => {
-    const { data, error } = await supabase.auth.getUser()
+  const loadSession = async () => {
+    const { data } = await supabase.auth.getSession()
 
-    if (!error) {
-      setUser(data.user)
+    if (!data.session) {
+      router.push('/login')
+    } else {
+      setUser(data.session.user)
     }
+
+    setLoading(false)
   }
 
-  getUser()
-}, [])
+  loadSession()
+
+  const {
+    data: { subscription }
+  } = supabase.auth.onAuthStateChange((_event, session) => {
+    if (session) {
+      setUser(session.user)
+    } else {
+      router.push('/login')
+    }
+  })
+
+  return () => subscription.unsubscribe()
+
+}, [router])
 
   useEffect(() => {
     if (!user) return
@@ -67,7 +85,8 @@ useEffect(() => {
     await supabase.from('bookmarks').delete().eq('id', id)
   }
 
-  if (!user) return <div>Loading...</div>
+  if (loading) return <div>Loading...</div>
+if (!user) return null
 
   return (
     <div className="max-w-xl mx-auto py-10">
